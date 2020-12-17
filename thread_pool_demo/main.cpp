@@ -14,13 +14,13 @@ void funA(uint32_t index)
 
 int main()
 {
-    ThreadPool threadPool(2, 2);
-
+    auto threadPool = std::make_unique<ThreadPool>(2, 2);
     for(uint32_t i=0; i < 20; i++) {
         PRINT_INFO("this is number %d.", i);
-        auto f = threadPool.AddTask(funA, i);
+        auto f = threadPool->AddTask(funA, i);
         sleep(ADD_TASK_SPEED);
     }
 
+    threadPool.reset();
     return 0;
 }

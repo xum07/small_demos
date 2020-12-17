@@ -49,9 +49,9 @@ ThreadPool::ThreadPool(uint32_t threadNum, uint32_t taskQueueSize)
             Task task;
             {
                 std::unique_lock<std::mutex> lock{_taskQueueLock};
-                this->_taskCV.wait(lock, [this]() { return !this->_taskQueue.empty(); });
+                this->_taskCV.wait(lock, [this]() { return  !this->_taskQueue.empty() || (_isRunning.load() == 0); });
 
-                if (this->_taskQueue.empty()) {
+                if ((_isRunning.load() == 0) || this->_taskQueue.empty()) {
                     return;
                 }
 
@@ -71,6 +71,7 @@ ThreadPool::ThreadPool(uint32_t threadNum, uint32_t taskQueueSize)
 
 ThreadPool::~ThreadPool()
 {
+    PRINT_INFO("ThreadPool is going to stop!");
     _isRunning.store(0);
     _taskCV.notify_all();
 
