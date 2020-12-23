@@ -17,7 +17,7 @@ class ThreadPool {
 public:
     using Task = std::function<void()>;
 
-    explicit ThreadPool(uint32_t threadNum = 1, uint32_t taskQueueSize = 1);
+    ThreadPool(uint32_t threadNum = 1, uint32_t taskQueueSize = 1);
     ~ThreadPool();
 
     ThreadPool(const ThreadPool &) = delete;
