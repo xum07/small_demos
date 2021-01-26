@@ -151,8 +151,8 @@ bool EnlargeFileMmap(FileMmap *fMmmpRec, int32_t incSize)
 
     /* 
      * 不同于网上查到的lseek扩展文件的方式，即在文件末尾write(fMmmpRec->fileFd, "\0", 1)，linux并没有自动给其它位置充填
-     * 像是在上一次lseek之后游标自动回到了文件开头一样，导致文件大小只有1byte，暂不清楚原因
-     * ps：而且如果该程序写成一个单独的cpp文件，类似在末尾写一个字符的方式又行的通了
+     * 像是在上一次lseek之后游标自动回到了文件开头一样，导致文件大小只有1byte
+     * ps：已知的情况可能为：设置O_APPEND模式后，lseek到文件结束后，实际不会进行偏移 也就是无法形成空洞效果，文件实质扩展失败
      */
     lseek(fMmmpRec->fileFd, 0, oldSize);
     if (write(fMmmpRec->fileFd, "\0", incSize) < 0) {
