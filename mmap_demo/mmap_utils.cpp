@@ -120,6 +120,47 @@ void CloseFileMmap(FileMmap *fMmmpRec)
 }
 
 /*
+ * 功能描述: 获取文件大小
+ */
+int32_t GetFileSize(int32_t fd)
+{
+    auto curPos = lseek(fd, 0, SEEK_CUR);
+    auto fileSize = lseek(fd, 0, SEEK_END);
+    lseek(fd, 0, curPos);
+    return fileSize;
+}
+
+/*
+ * 功能描述: 扩展文件大小
+ * ps: 不同系统支持的单次lseek扩展大小不同
+ */
+void ExpandFile(int32_t incSize, int32_t fd)
+{
+    auto originPos = lseek(fd, 0, SEEK_CUR);
+    auto originFileSize = GetFileSize(fd);
+    int32_t actualExpandedSize = 0;
+
+    do {
+        auto curFileEnd = lseek(fd, 0, SEEK_END);
+        auto ret = lseek(fd, incSize - actualExpandedSize, SEEK_END);
+        if (ret < 0) {
+            PRINT_ERROR("lseek failed, incSize is: %u.", incSize);
+            return;
+        }
+
+        lseek(fd, 0, curFileEnd);
+        if (write(fd, "\0", incSize - actualExpandedSize) < 0) {
+            PRINT_ERROR("write to file mmap failed.");
+            return;
+        }
+
+        actualExpandedSize = GetFileSize(fd) - originFileSize;
+    } while (actualExpandedSize < incSize);
+
+    lseek(fd, 0, originPos);
+}
+
+/*
  * 功能描述: 根据需要增加的空间大小，自动扩展映射的内存缓冲区
  */
 bool EnlargeFileMmap(FileMmap *fMmmpRec, int32_t incSize)
@@ -142,24 +183,13 @@ bool EnlargeFileMmap(FileMmap *fMmmpRec, int32_t incSize)
         return false;
     }
 
-    /* 增加文件大小 */
-    ret = lseek(fMmmpRec->fileFd, incSize, SEEK_END);
-    if (ret < 0) {
-        PRINT_ERROR("lseek failed, incSize is: %u.", incSize);
-        return false;
-    }
-
     /* 
+     * 增加文件大小
      * 不同于网上查到的lseek扩展文件的方式，即在文件末尾write(fMmmpRec->fileFd, "\0", 1)，linux并没有自动给其它位置充填
      * 像是在上一次lseek之后游标自动回到了文件开头一样，导致文件大小只有1byte
      * ps：已知的情况可能为：设置O_APPEND模式后，lseek到文件结束后，实际不会进行偏移 也就是无法形成空洞效果，文件实质扩展失败
      */
-    lseek(fMmmpRec->fileFd, 0, oldSize);
-    if (write(fMmmpRec->fileFd, "\0", incSize) < 0) {
-        PRINT_ERROR("write to file mmap failed.");
-        return false;
-    }
-    lseek(fMmmpRec->fileFd, 0, oldSize);
+    ExpandFile(incSize, fMmmpRec->fileFd);
 
     auto addr = GetMmapBuff(nullptr, oldSize + incSize, PROT_READ | PROT_WRITE, MAP_SHARED, fMmmpRec->fileFd, 0);
     if (addr == MAP_FAILED) {
