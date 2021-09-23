@@ -1,7 +1,9 @@
 #include <thread>
 #include <chrono>
 #include <future>
+#include <iostream>
 #include "utils.h"
+#include "async_task.h"
 
 void thread1(std::promise<int>* promiseObj)
 {
@@ -22,32 +24,25 @@ void SyncWait()
     PRINT_INFO("get result form thread1 in SyncWait: %d\n", result);
 }
 
-void thread2(std::future<int>&& futureObj)
+void AsyncWait(std::shared_ptr<AsyncTask> taskObj)
 {
-    PRINT_INFO("start thread2...\n");
-    futureObj.wait();
-    auto result = futureObj.get();
-    PRINT_INFO("get result form thread1 in thread2: %d\n", result);
-}
-
-// always failed, because future can not pass to a new thread
-void AsyncWait()
-{
-    std::promise<int> promiseObj;
-    std::future<int> futureObj(promiseObj.get_future());
-    std::thread t1(thread1, &promiseObj);
-    t1.detach();
-    PRINT_INFO("continue in AsyncWait after thread1...\n");
-
-    std::thread t2(thread2, std::move(futureObj));
-    t2.detach();
-    PRINT_INFO("continue in AsyncWait after thread2...\n");
+    PRINT_INFO("start a sync thread\n");
+    auto f = taskObj->GetFuture();
+    auto result = f.get();
+    std::cout << "result id is: " << result.id << ", name is: " << result.name << std::endl;
 }
 
 int main()
 {
+    // sync test
     SyncWait();
-    AsyncWait();
+    
+    // async test
+    auto taskObj = std::make_shared<AsyncTask>();
+    std::promise<AsyncTask::TaskContent> promiseObj;
+    taskObj->StartTask(promiseObj, AsyncWait, taskObj);
+
     std::this_thread::sleep_for(std::chrono::seconds(10));
+    PRINT_INFO("end main\n");
     return 0;
 }
