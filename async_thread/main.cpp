@@ -9,7 +9,7 @@ void thread1(std::promise<int>* promiseObj)
 {
     PRINT_INFO("start thread1...\n");
     std::this_thread::sleep_for(std::chrono::seconds(3));
-    promiseObj->set_value(1);
+    promiseObj->set_value(3);
 }
 
 void SyncWait()
@@ -24,11 +24,8 @@ void SyncWait()
     PRINT_INFO("get result form thread1 in SyncWait: %d\n", result);
 }
 
-void AsyncWait(std::shared_ptr<AsyncTask> taskObj)
+void AsyncWait(AsyncTask::TaskContent& result)
 {
-    PRINT_INFO("start a sync thread\n");
-    auto f = taskObj->GetFuture();
-    auto result = f.get();
     std::cout << "result id is: " << result.id << ", name is: " << result.name << std::endl;
 }
 
@@ -38,9 +35,8 @@ int main()
     SyncWait();
     
     // async test
-    auto taskObj = std::make_shared<AsyncTask>();
-    std::promise<AsyncTask::TaskContent> promiseObj;
-    taskObj->StartTask(promiseObj, AsyncWait, taskObj);
+    auto taskObj = std::make_unique<AsyncTask>();
+    taskObj->StartTask(AsyncWait);
 
     std::this_thread::sleep_for(std::chrono::seconds(10));
     PRINT_INFO("end main\n");

@@ -1,13 +1,19 @@
+#include <iostream>
 #include "async_task.h"
 #include "utils.h"
 
-void AsyncTask::StartTask(std::promise<TaskContent>& promiseObj, std::function<void(std::shared_ptr<AsyncTask> taskObj)> func, std::shared_ptr<AsyncTask> taskObj)
+void AsyncTask::StartTask(std::function<void(TaskContent&)> func)
 {
-    m_future = promiseObj.get_future();
+    auto promiseObj = std::promise<TaskContent>();
+    auto fut(promiseObj.get_future());
     std::thread t(&AsyncTask::Task1, this, std::ref(promiseObj));
     t.detach();
 
-    std::thread t1(func, taskObj);
+    m_future = std::move(fut);
+    std::thread t1([this, &func](){
+        auto result = m_future.get();
+        func(result);
+    });
     t1.detach();
 }
 

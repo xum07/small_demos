@@ -16,8 +16,7 @@ public:
     AsyncTask() = default;
     ~AsyncTask() = default;
 
-    void StartTask(std::promise<TaskContent>& promiseObj, std::function<void(std::shared_ptr<AsyncTask> taskObj)> func, std::shared_ptr<AsyncTask> taskObj);
-    std::future<TaskContent> GetFuture() { return std::move(m_future); }
+    void StartTask(std::function<void(TaskContent&)> func);
 
 private:
     void Task1(std::promise<TaskContent>& promiseObj);
