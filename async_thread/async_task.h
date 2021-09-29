@@ -16,13 +16,10 @@ public:
     AsyncTask() = default;
     ~AsyncTask() = default;
 
-    void StartTask(std::function<void(TaskContent&)> func);
+    void StartTask(std::promise<TaskContent> promiseObj, std::function<void(TaskContent&)> func);
 
 private:
     void Task1(std::promise<TaskContent>& promiseObj);
-
-private:
-    std::future<TaskContent> m_future;
 };
 
 #endif // ASYNC_TASK_H

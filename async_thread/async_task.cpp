@@ -2,16 +2,14 @@
 #include "async_task.h"
 #include "utils.h"
 
-void AsyncTask::StartTask(std::function<void(TaskContent&)> func)
+void AsyncTask::StartTask(std::promise<TaskContent> promiseObj, std::function<void(TaskContent&)> func)
 {
-    auto promiseObj = std::promise<TaskContent>();
     auto fut(promiseObj.get_future());
     std::thread t(&AsyncTask::Task1, this, std::ref(promiseObj));
     t.detach();
 
-    m_future = std::move(fut);
-    std::thread t1([this, &func](){
-        auto result = m_future.get();
+    std::thread t1([&func, fut=std::move(fut)]() mutable {
+        auto result = fut.get();
         func(result);
     });
     t1.detach();

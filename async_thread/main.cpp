@@ -36,7 +36,8 @@ int main()
     
     // async test
     auto taskObj = std::make_unique<AsyncTask>();
-    taskObj->StartTask(AsyncWait);
+    auto promiseObj = std::promise<AsyncTask::TaskContent>();
+    taskObj->StartTask(std::move(promiseObj), AsyncWait);
 
     std::this_thread::sleep_for(std::chrono::seconds(10));
     PRINT_INFO("end main\n");
