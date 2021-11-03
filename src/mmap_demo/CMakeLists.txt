@@ -1,0 +1,2 @@
+aux_source_directory(${CMAKE_CURRENT_SOURCE_DIR} SRC_FILES)
+ADD_LIBRARY(mmap_demo STATIC ${SRC_FILES})
