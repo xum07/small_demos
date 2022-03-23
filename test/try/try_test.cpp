@@ -1,4 +1,4 @@
-#include "try/try.h"
+#include "try.h"
 #include <gtest/gtest.h>
 
 TEST(Test, Case2)
