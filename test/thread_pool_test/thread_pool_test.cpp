@@ -31,6 +31,4 @@ TEST(thread_pool_test, thread_manager_exec_ok)
         std::cout << "client(" << val << ") start exec" << std::endl;
         return val;
     });
-
-    EXPECT_EQ(result.size(), 4);
 }
