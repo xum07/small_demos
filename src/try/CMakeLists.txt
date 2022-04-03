@@ -1,2 +1,0 @@
-aux_source_directory(${CMAKE_CURRENT_SOURCE_DIR} SRC_FILES)
-ADD_LIBRARY(try OBJECT ${SRC_FILES})
